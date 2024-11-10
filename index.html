@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz de Python</title>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .quiz-container { width: 300px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; text-align: center; }
+        .question { margin-bottom: 10px; }
+        .options { margin-bottom: 10px; }
+        .result { display: none; }
+        .correct { color: green; }
+        .incorrect { color: red; }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h2>Quiz de Python</h2>
+        <div id="quiz">
+            <div class="question" id="question">Pergunta aparecerá aqui</div>
+            <div class="options">
+                <label><input type="radio" name="option" value="0" onchange="enableNextButton()"> a) </label><br>
+                <label><input type="radio" name="option" value="1" onchange="enableNextButton()"> b) </label><br>
+                <label><input type="radio" name="option" value="2" onchange="enableNextButton()"> c) </label><br>
+                <label><input type="radio" name="option" value="3" onchange="enableNextButton()"> d) </label><br>
+            </div>
+            <button onclick="nextQuestion()" id="next-btn" disabled>Próximo</button>
+        </div>
+        <div class="result" id="result">
+            <h3>Resultado:</h3>
+            <p id="score"></p>
+            <div id="answers"></div>
+            <button onclick="resetQuiz()">Refazer Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            { question: "1. O que Python é?", options: ["a) Uma linguagem de estilo", "b) Uma linguagem de marcação", "c) Uma linguagem de programação", "d) Um navegador"], answer: 2 },
+            { question: "2. Qual a extensão padrão para arquivos Python?", options: ["a) .java", "b) .py", "c) .html", "d) .exe"], answer: 1 },
+            { question: "3. Qual comando imprime algo no console?", options: ["a) console.log", "b) print()", "c) log()", "d) imprimir()"], answer: 1 },
+            { question: "4. Como declaramos uma variável em Python?", options: ["a) let x = 10", "b) var x = 10", "c) x = 10", "d) int x = 10"], answer: 2 },
+            { question: "5. Qual estrutura de repetição existe em Python?", options: ["a) for", "b) repeat", "c) loop", "d) until"], answer: 0 }
+        ];
+        
+        let currentQuestion = 0;
+        let score = 0;
+        let answers = [];
+
+        function loadQuestion() {
+            if (currentQuestion < questions.length) {
+                const q = questions[currentQuestion];
+                document.getElementById("question").innerText = q.question;
+                const options = document.querySelectorAll(".options label");
+                options.forEach((label, index) => {
+                    label.innerHTML = `<input type="radio" name="option" value="${index}" onchange="enableNextButton()"> ${q.options[index]}`;
+                });
+                document.getElementById("next-btn").disabled = true;
+            } else {
+                showResults();
+            }
+        }
+
+        function enableNextButton() {
+            document.getElementById("next-btn").disabled = false;
+        }
+
+        function getSelectedAnswer() {
+            const options = document.querySelectorAll('input[name="option"]');
+            let selected = null;
+            options.forEach(option => {
+                if (option.checked) selected = parseInt(option.value);
+            });
+            return selected;
+        }
+
+        function checkAnswer() {
+            const selected = getSelectedAnswer();
+            if (selected === null) return; // No option selected
+            const q = questions[currentQuestion];
+            if (selected === q.answer) {
+                score++;
+                answers.push({ question: q.question, selected: q.options[selected], correct: true, correctAnswer: q.options[q.answer] });
+            } else {
+                answers.push({ question: q.question, selected: q.options[selected], correct: false, correctAnswer: q.options[q.answer] });
+            }
+        }
+
+        function nextQuestion() {
+            checkAnswer();
+            currentQuestion++;
+            loadQuestion();
+        }
+
+        function showResults() {
+            document.getElementById("quiz").style.display = "none";
+            const resultDiv = document.getElementById("result");
+            resultDiv.style.display = "block";
+            document.getElementById("score").innerText = `Você acertou ${score} de ${questions.length} perguntas.`;
+            const answersDiv = document.getElementById("answers");
+
+            answersDiv.innerHTML = `
+                <h4>Corretas:</h4>
+                ${answers.filter(a => a.correct).map(a => `
+                    <p class="correct">${a.question} R = ${a.correctAnswer} (correta)</p>
+                `).join("")}
+
+                <h4>Erradas:</h4>
+                ${answers.filter(a => !a.correct).map(a => `
+                    <p class="incorrect">${a.question} R = ${a.selected} (incorreto), Correto: ${a.correctAnswer}</p>
+                `).join("")}
+            `;
+            localStorage.setItem('pythonQuizScore', score);
+            localStorage.setItem('pythonQuizAnswers', JSON.stringify(answers));
+        }
+
+        function resetQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            answers = [];
+            document.getElementById("quiz").style.display = "block";
+            document.getElementById("result").style.display = "none";
+            loadQuestion();
+        }
+
+        window.onload = loadQuestion;
+    </script>
+</body>
+</html>
